@@ -38,16 +38,16 @@ public class PetstoreApplication {
             return this.repository.findAll(page.toPageable());
         }
 
-        @GetMapping("/{id}")
-        public ResponseEntity<Pet> get(@PathVariable("id") Long id) {
-            var petOpt = this.repository.findById(id);
-            return petOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-        }
-
         @PostMapping
         @ResponseStatus(HttpStatus.CREATED)
         public void create(@RequestBody CreatePetDto pet) {
             this.repository.save(pet.toPet());
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<Pet> get(@PathVariable("id") Long id) {
+            var petOpt = this.repository.findById(id);
+            return petOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         }
 
         @DeleteMapping("/{id}")
