@@ -1,9 +1,9 @@
 package com.jkupcho.petstore;
 
-import com.jkupcho.petstore.domain.CreatePetDto;
+import com.jkupcho.petstore.domain.PartialPetDto;
 import com.jkupcho.petstore.domain.Pet;
+import com.jkupcho.petstore.domain.PetMapper;
 import com.jkupcho.petstore.domain.PetRepository;
-import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,10 +26,12 @@ public class PetstoreApplication {
     static class PetController {
 
         private final PetRepository repository;
+        private final PetMapper petMapper;
 
         @Autowired
-        public PetController(PetRepository repository) {
+        public PetController(PetRepository repository, PetMapper petMapper) {
             this.repository = repository;
+            this.petMapper = petMapper;
         }
 
         @GetMapping
@@ -40,8 +41,20 @@ public class PetstoreApplication {
 
         @PostMapping
         @ResponseStatus(HttpStatus.CREATED)
-        public void create(@RequestBody CreatePetDto pet) {
+        public void create(@RequestBody PartialPetDto pet) {
             this.repository.save(pet.toPet());
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<Pet> update(@PathVariable("id") Long id, @RequestBody PartialPetDto dto) {
+            var petOpt = this.repository.findById(id);
+            if (petOpt.isPresent()) {
+                var entity = petOpt.get();
+                this.petMapper.updatePetFromDto(dto, entity);
+                entity = this.repository.save(entity);
+                return ResponseEntity.ok(entity);
+            }
+            return ResponseEntity.notFound().build();
         }
 
         @GetMapping("/{id}")

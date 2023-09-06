@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * DTO for {@link Pet}
  */
-public record CreatePetDto(String name, Integer age) implements Serializable {
+public record PartialPetDto(String name, Integer age) implements Serializable {
 
     public Pet toPet() {
         var pet = new Pet();
