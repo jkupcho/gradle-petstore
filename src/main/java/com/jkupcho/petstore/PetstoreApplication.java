@@ -1,10 +1,16 @@
 package com.jkupcho.petstore;
 
+import com.jkupcho.petstore.domain.CreatePetDto;
+import com.jkupcho.petstore.domain.Pet;
+import com.jkupcho.petstore.domain.PetRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @SpringBootApplication
 public class PetstoreApplication {
@@ -14,14 +20,39 @@ public class PetstoreApplication {
     }
 
     @RestController
-    static class EchoController {
+    @RequestMapping("/api/pets")
+    static class PetController {
 
-        @GetMapping("/echo")
-        public Echo getEcho(@RequestParam("message") String message) {
-            return new Echo(message);
+        private final PetRepository repository;
+
+        @Autowired
+        public PetController(PetRepository repository) {
+            this.repository = repository;
+        }
+
+        @GetMapping
+        public Page<Pet> getAll(PageCriteria page) {
+            return this.repository.findAll(page.toPageable());
+        }
+
+        @PostMapping
+        @ResponseStatus(HttpStatus.CREATED)
+        public void create(@RequestBody CreatePetDto pet) {
+            this.repository.save(pet.toPet());
+        }
+
+        @DeleteMapping("/{id}")
+        @ResponseStatus(HttpStatus.NO_CONTENT)
+        public void delete(@PathVariable("id") Long id) {
+            this.repository.deleteById(id);
         }
 
     }
 
-    record Echo(String message) {}
+    record PageCriteria(Integer limit, Integer page) {
+
+        Pageable toPageable() {
+            return PageRequest.of(page == null ? 0 : page , limit == null ? 25 : limit);
+        }
+    }
 }
