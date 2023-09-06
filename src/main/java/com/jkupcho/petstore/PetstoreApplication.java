@@ -3,6 +3,7 @@ package com.jkupcho.petstore;
 import com.jkupcho.petstore.domain.CreatePetDto;
 import com.jkupcho.petstore.domain.Pet;
 import com.jkupcho.petstore.domain.PetRepository;
+import jakarta.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @SpringBootApplication
@@ -33,6 +36,12 @@ public class PetstoreApplication {
         @GetMapping
         public Page<Pet> getAll(PageCriteria page) {
             return this.repository.findAll(page.toPageable());
+        }
+
+        @GetMapping("/{id}")
+        public ResponseEntity<Pet> get(@PathVariable("id") Long id) {
+            var petOpt = this.repository.findById(id);
+            return petOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         }
 
         @PostMapping
